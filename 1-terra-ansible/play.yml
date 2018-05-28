@@ -1,0 +1,11 @@
+---
+- name: install app
+  hosts: dev
+  gather_facts: no
+  become: true
+
+  tasks:
+    - name: Install htop.
+      package: name={{item}} state=present update_cache=true
+      with_items:
+        - htop

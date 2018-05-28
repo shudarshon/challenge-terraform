@@ -1,0 +1,12 @@
+aws_profile		        = "myprofile"                  #aws profiling can make it easy to use terraform on specific aws account from aws profile environment variable
+aws_region 		        = "us-east-1"
+instance_type         = "t2.micro"
+instance_name         = "dev-instance"
+ami_id   		          = "ami-467ca739"
+subnet_id             = "subnet-5dc34072"
+security_group        = "sg-48011f3f"
+ssh_user_name         = "ec2-user"
+ssh_key_name          = "test"
+ssh_key_path          = "/home/chaks/.key/test.pem"  #use this variable only when you want to use existing keys in aws
+instance_count        = 3
+dev_host_label        = "dev"
