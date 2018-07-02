@@ -1,5 +1,7 @@
 variable "aws_region" {}
-variable "security_group_id" {}
+variable "sg_id_http" {}
+variable "sg_id_https" {}
+variable "sg_id_tcp" {}
 variable "enable_tcp" {}
 variable "enable_http" {}
 variable "enable_https" {}

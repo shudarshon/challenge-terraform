@@ -17,8 +17,8 @@ resource "aws_security_group_rule" "uptimerobot_to_tcp" {
   to_port           = "65535"
   protocol          = "tcp"
   cidr_blocks       = ["${formatlist("%s/32", split("\n", trimspace(replace(data.http.uptimerobot_ipv4.body, "/\\r/", ""))))}"]
-  #ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
-  security_group_id = "${var.security_group_id}"
+  ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
+  security_group_id = "${var.sg_id_tcp}"
 }
 
 resource "aws_security_group_rule" "uptimerobot_to_http" {
@@ -28,8 +28,8 @@ resource "aws_security_group_rule" "uptimerobot_to_http" {
   to_port           = "80"
   protocol          = "tcp"
   cidr_blocks       = ["${formatlist("%s/32", split("\n", trimspace(replace(data.http.uptimerobot_ipv4.body, "/\\r/", ""))))}"]
-  #ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
-  security_group_id = "${var.security_group_id}"
+  ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
+  security_group_id = "${var.sg_id_http}"
 }
 
 resource "aws_security_group_rule" "uptimerobot_to_https" {
@@ -39,6 +39,6 @@ resource "aws_security_group_rule" "uptimerobot_to_https" {
   to_port           = "443"
   protocol          = "tcp"
   cidr_blocks       = ["${formatlist("%s/32", split("\n", trimspace(replace(data.http.uptimerobot_ipv4.body, "/\\r/", ""))))}"]
-  #ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
-  security_group_id = "${var.security_group_id}"
+  ipv6_cidr_blocks  = ["${formatlist("%s/128", split("\n", trimspace(replace(data.http.uptimerobot_ipv6.body, "/\\r/", ""))))}"]
+  security_group_id = "${var.sg_id_https}"
 }
