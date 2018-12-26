@@ -1,0 +1,67 @@
+---
+-
+  package:
+    name: "{{item}}"
+    state: present
+  name: "Install test dependencies"
+  tags:
+    - install_dependencies
+  with_items: "{{ test_required_libs }}"
+-
+  name: "Install nginx"
+  apt:
+    name: nginx
+    state: present
+  tags:
+    - install_nginx
+-
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  name: "Install php7.0 on debian or derivates"
+  notify:
+    - "enable php"
+  with_items:
+    - php7.0-cgi
+    - php7.0-cli
+    - php7.0-common
+    - php7.0-fpm
+    - php7.0-intl
+    - php7.0-mysql
+    - php7.0-mbstring
+    - php7.0-xml
+    - php7.0-ldap
+    - php7.0-gd
+    - php7.0-bcmath
+    - php7.0-zip
+    - php7.0-curl
+    - php7.0-dev
+    - libapache2-mod-php7.0
+    - php7.0-json
+    - php7.0-opcache
+    - php7.0-readline
+-
+  lineinfile: "dest=\"{{ php_ini_config_file }}\" regexp=\"{{ item.regex }}\" line=\"{{ item.line }}\""
+  name: "edit php fpm ini file settings"
+  tags:
+    - edit_php_fpm_config_ini
+  with_items:
+    -
+      line: "error_reporting = E_ALL"
+      regex: "error_reporting = .*"
+    -
+      line: "display_errors = On"
+      regex: "display_errors = .*"
+    -
+      line: cgi.fix_pathinfo=0
+      regex: cgi.fix_pathinfo=.*
+    -
+      line: "memory_limit = 512M"
+      regex: "memory_limit = .*"
+    -
+      line: "upload_max_filesize = 100M"
+      regex: "upload_max_filesize = .*"
+    -
+      line: "date.timezone = UTC"
+      regex: "date.timezone =.*"

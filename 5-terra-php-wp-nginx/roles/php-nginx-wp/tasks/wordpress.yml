@@ -1,0 +1,67 @@
+---
+-
+  get_url:
+    dest: /tmp
+    force: false
+    url: "{{ wp_url }}"
+  name: "Download WordPress"
+  tags:
+    - download_wordpress
+-
+  name: "Extract archive"
+  notify:
+    - "reload systemd"
+    - "enable nginx"
+    - "restart nginx"
+    - "enable php"
+  tags:
+    - extact_wp_archive_to_app_root
+  unarchive:
+    copy: false
+    dest: "{{ app_root }}"
+    extra_opts:
+      - "--strip-components=1"
+    group: "{{ nginx_user }}"
+    owner: "{{ nginx_user }}"
+    src: "{{ wp_tar_file }}"
+-
+  file:
+    mode: 493
+    path: "{{item}}"
+    state: directory
+  name: "Set up wordpress file permission"
+  tags:
+    - setup_wp_file_permission
+  with_items:
+    - "{{ app_root }}/wp-admin"
+    - "{{ app_root }}/wp-content"
+    - "{{ app_root }}/wp-includes"
+-
+  file:
+    path: "{{ wp_tar_file }}"
+    state: absent
+  name: "Remove wordpress download archive"
+  tags:
+    - remove_wp_download_archive
+-
+  get_url:
+    dest: "{{ wp_cli_bin_path }}"
+    mode: 493
+    url: "{{ wp_cli_phar_url }}"
+  name: "Install WP-CLI"
+  tags:
+    - install_wp_cli
+-
+  file:
+    group: "{{ nginx_user }}"
+    mode: 493
+    owner: "{{ nginx_user }}"
+    path: "{{item}}"
+    state: directory
+    recurse: yes
+  name: "Creates wpcli cache directory"
+  tags:
+    - create_wp_cli_cache_dir
+  with_items:
+    - "{{ wp_cli_cache_dir }}/cache/plugin/"
+    - "{{ wp_cli_cache_dir }}/cache/theme/"

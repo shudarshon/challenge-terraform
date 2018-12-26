@@ -1,0 +1,23 @@
+---
+# Dependency
+test_required_libs:
+    - wget
+    - net-tools
+    - openssh-clients
+    - unzip
+
+# Nginx config variable
+nginx_user: nginx
+app_config_path: /etc/nginx/config/app.conf
+app_config_path_link: /etc/nginx/conf.d/default.conf
+nginx_config_root: /etc/nginx/conf.d
+fastcgi_config_file: /etc/opt/remi/php72/php-fpm.d/www.conf
+php_ini_config_file: /etc/opt/remi/php72/php.ini
+fastcgi_pass: 127.0.0.1:9000
+
+# CentOS Epel & Remi Repo
+epel_repo_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+epel_repo_gpg_key_url: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL"
+remi_repo_url: "http://rpms.remirepo.net/enterprise/remi-release-7.rpm"
+remi_repo_gpg_key_url: "http://rpms.remirepo.net/RPM-GPG-KEY-remi"
+remi_php_mirror_url: "http://rpms.remirepo.net/enterprise/7.4/php72/mirror"

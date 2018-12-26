@@ -1,0 +1,63 @@
+---
+- name: Install wp-config file
+  command: "wp config create --dbname={{db_name}} --dbuser={{db_user}} --dbpass={{db_pass}} --dbhost={{db_url}} --path={{ app_root }} --skip-check --allow-root"
+  tags:
+    - install_wp_config
+  become_user: "{{ nginx_user }}"
+-
+  get_url:
+    dest: "/tmp/{{ item }}.zip"
+    force: false
+    url: "https://downloads.wordpress.org/plugin/{{ item }}.zip"
+  name: "Download plugins"
+  tags:
+    - download_plugin
+  with_items: "{{ required_plugins }}"
+  become_user: "{{ nginx_user }}"
+-
+  unarchive:
+    copy: false
+    creates: "{{ wp_plugin_dir }}/{{ item }}/"
+    dest: "{{ wp_plugin_dir }}"
+    src: "/tmp/{{ item }}.zip"
+  name: "Unpack plugins"
+  tags:
+    - unpack_plugin
+  with_items: "{{ required_plugins }}"
+  become_user: "{{ nginx_user }}"
+
+- name: Check installed plugins
+  command: "wp --path={{ app_root }} plugin is-installed {{item}} --allow-root"
+  tags:
+    - check_installed_plugin
+  with_items: "{{ required_plugins }}"
+  become_user: "{{ nginx_user }}"
+
+- name: Activate installed plugin
+  command: "wp --path={{ app_root }} plugin activate {{item}} --allow-root"
+  tags:
+    - activate_plugin
+  with_items: "{{ required_plugins }}"
+  become_user: "{{ nginx_user }}"
+
+- name: Activate xray plugin
+  command: "wp --path={{ app_root }} plugin activate {{plugin_name}} --allow-root"
+  tags:
+    - activate_xray_plugin
+  become_user: "{{ nginx_user }}"
+
+- name: Activate xray theme
+  command: "wp --path={{ app_root }} theme activate {{theme_name}} --allow-root"
+  tags:
+    - activate_xray_theme
+  become_user: "{{ nginx_user }}"
+-
+  file:
+    group: "{{ nginx_user }}"
+    owner: "{{ nginx_user }}"
+    path: "{{ app_root }}/wp-content"
+    recurse: yes
+    state: directory
+  name: "Change theme and plugin permission"
+  tags:
+    - change_plugin_theme_permission

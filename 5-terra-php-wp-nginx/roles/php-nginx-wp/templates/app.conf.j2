@@ -1,0 +1,150 @@
+server {
+
+	listen 80;
+	server_name _;
+	charset utf-8;
+	root {{ app_root }};
+
+	client_max_body_size {{ nginx_file_upload_limit_mb }}M;
+
+	if ($http_x_forwarded_proto != "https") {
+				rewrite ^ https://$host$request_uri permanent;
+	}
+
+	if ($query_string != "") {
+    		set $no_cache 1;
+	}
+
+	# Don't cache uris containing the following segments
+	if ($request_uri ~* "(/wp-admin/|/xmlrpc.php|/wp-(app|cron|login|register|mail).php|wp-.*.php|/feed/|index.php|wp-comments-popup.php|wp-links-opml.php|wp-locations.php|sitemap(_index)?.xml|[a-z0-9_-]+-sitemap([0-9]+)?.xml)") {
+    		set $no_cache 1;
+	}
+
+	# Don't use the cache for logged in users or recent commenters
+	if ($http_cookie ~* "comment_author|wordpress_[a-f0-9]+|wp-postpass|wordpress_no_cache|wordpress_logged_in") {
+    		set $no_cache 1;
+	}
+
+    location ~* \.(?:css|js|map|jpe?g|gif|png)$ { }
+
+	location / {
+
+				proxy_set_header X-Forwarded-Host $host;
+				proxy_set_header X-Forwarded-Server $host;
+				proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+				proxy_set_header X-Forwarded-Proto $scheme;
+				proxy_set_header X-Real-IP $remote_addr;
+				proxy_set_header Host $host;
+
+				index index.php;
+				try_files $uri $uri/ /index.php?q=$uri&$args;
+	}
+
+	# Add ELB healthcheck in case of https redirect
+	location /health-check {
+				access_log off;
+				return 200;
+	}
+
+	# Allow this file since some plugin requires this file
+	location /wp-admin/admin-ajax.php {
+				allow all;
+	}
+
+	# Add trailing slash to */wp-admin requests.
+	location = /wp-admin {
+        rewrite ^ /wp-admin/ permanent;
+  }
+
+	location = /robots.txt {
+				allow all;
+				log_not_found off;
+				access_log off;
+	}
+
+	location = /favicon.ico {
+				log_not_found off;
+				access_log off;
+	}
+
+	# Deny all xmlrpc.php access
+	location = /xmlrpc.php {
+				deny all;
+				access_log off;
+	}
+
+	# Deny hidden files and folders such as .git
+	location ~ /\. {
+				access_log off;
+				log_not_found off;
+				deny all;
+	}
+
+	# Accept for Let's Encrypt(certbot)
+	location ^~ /.well-known/ {
+    		access_log off;
+    		log_not_found off;
+    		autoindex off;
+    		try_files $uri $uri/ =404;
+	}
+
+	# Deny less files
+	location ~* ^.+\.(less)$ {
+    		deny all;
+    		access_log off;
+	}
+
+	# Deny access to any files with a .php extension in the uploads directory
+	location ~* /(?:uploads|files)/.*\.php$ {
+    		deny all;
+	}
+
+	# Make sure files with the following extensions do not get loaded by nginx because nginx would display the source code, and these files can contain PASSWORDS!
+	location ~* \.(engine|inc|info|install|make|module|profile|test|po||pl|py|lua|sh|.*sql|theme|tpl(\.php)?|xtmpl)\$|^(\..*|Entries.*|Repository|Root|Tag|Template)\$|\.php_ {
+				return 444;
+	}
+
+	# Directives to send expires headers and turn off 404 error logging.
+    	location ~* ^.+\.(ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
+        	access_log off;
+					log_not_found off;
+					expires max;
+    	}
+
+	# Deny request to wp config file, readme file etc.
+	location ~* /(\.|wp-config\.php|wp-config\.txt|changelog\.txt|readme\.txt|readme\.html|license\.txt) {
+					deny all;
+	}
+
+	# Deny all REST API access
+	location ^~ /wp-json/ {
+    		deny all;
+    		access_log off;
+	}
+
+	# Allow wp admin panel by IP
+	location ~ ^/wp-(admin/|login\.php\b) {
+				#allow 127.0.0.1;  #localhost
+				#allow x.x.x.x;    #home IP
+				#deny all;
+
+				fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass {{ fastcgi_pass }};
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+	}
+
+	# Process files matching php extension
+	location ~ \.php(?:/|$) {
+        if (!-f $document_root$fastcgi_script_name){
+            rewrite ^ /index.php break;
+        }
+
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass {{ fastcgi_pass }};
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+  }
+}

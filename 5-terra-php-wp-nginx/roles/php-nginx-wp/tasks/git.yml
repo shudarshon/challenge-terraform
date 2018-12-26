@@ -1,0 +1,64 @@
+---
+-
+  file:
+    group: "{{ nginx_user }}"
+    mode: 448
+    owner: "{{ nginx_user }}"
+    path: /var/www/.ssh
+    state: directory
+  name: "Create.ssh directory"
+  tags:
+    - create_ssh_directory
+-
+  copy:
+    content: "{{ ssh_private_key | b64decode }}"
+    dest: /var/www/.ssh/id_rsa
+    group: "{{ nginx_user }}"
+    mode: 384
+    owner: "{{ nginx_user }}"
+  name: "Copy ssh key on the server"
+  tags:
+    - copy_ssh_key
+-
+  lineinfile:
+    create: true
+    dest: /var/www/.ssh/known_hosts
+    line: "{{ lookup('pipe', 'ssh-keyscan -t rsa bitbucket.org') }}"
+    regexp: ^bitbucket\.org
+    state: present
+  name: "ensure bitbucket.org is a known host"
+  tags:
+    - add_known_host_entry
+-
+  file:
+    group: "{{ nginx_user }}"
+    mode: 493
+    owner: "{{ nginx_user }}"
+    path: "{{item}}"
+    state: directory
+  name: "Create theme and plugin directory"
+  tags:
+    - create_theme_and_plugin_directory
+  with_items:
+    - "{{app_root}}/wp-content/themes/upskillable"
+    - "{{app_root}}/wp-content/plugins/upskillable"
+-
+  git:
+    accept_hostkey: true
+    dest: "{{app_root}}/wp-content/themes/upskillable"
+    key_file: /var/www/.ssh/id_rsa
+    repo: "git@bitbucket.org:myteam/theme-xray.git"
+    version: "{{ git_branch }}"
+  name: "Clone theme code repository"
+  tags:
+    - add_upskillable_corpweb_theme
+-
+  git:
+    accept_hostkey: true
+    dest: "{{app_root}}/wp-content/plugins/upskillable"
+    key_file: /var/www/.ssh/id_rsa
+    repo: "git@bitbucket.org:myteam/plugin-xray.git"
+    version: "{{ git_branch }}"
+  name: "Clone plugin code repository"
+  tags:
+    - add_upskillable_corpweb_plugin

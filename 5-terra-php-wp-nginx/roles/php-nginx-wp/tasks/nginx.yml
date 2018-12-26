@@ -1,0 +1,53 @@
+---
+-
+  copy:
+    dest: "{{ nginx_root_dir }}"
+    mode: 420
+    src: mime.types
+  name: "Install nginx mime types in nginx root directory"
+  tags:
+    - install_nginx_mime_types
+-
+  name: "Install nginx configuration in nginx root directory"
+  tags:
+    - install_nginx_configuration
+  template:
+    dest: "{{ nginx_root_dir }}/nginx.conf"
+    mode: 420
+    remote_src: false
+    src: nginx.conf.j2
+-
+  name: "Install application configuration in nginx sites directory"
+  tags:
+    - install_nginx_application_config
+  template:
+    dest: "{{ app_config_path }}"
+    mode: 420
+    remote_src: false
+    src: app.conf.j2
+-
+  file:
+    path: "{{ app_config_path_link }}"
+    state: absent
+  name: "Remove nginx default config file"
+  tags:
+    - remove_nginx_default_config
+-
+  file:
+    dest: "{{ app_config_path_link }}"
+    mode: 420
+    src: "{{ app_config_path }}"
+    state: link
+  name: "Install symlink to application config file"
+  tags:
+    - symlink_nginx_app_config
+-
+  file:
+    group: "{{ nginx_user }}"
+    mode: 493
+    owner: "{{ nginx_user }}"
+    path: "{{ app_root }}"
+    state: directory
+  name: "create application root directory"
+  tags:
+    - create_app_root
