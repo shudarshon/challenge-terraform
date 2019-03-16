@@ -9,7 +9,7 @@ we have isolated terraform configuration of AWS resources for webapp application
 
 # usage
 
-simply to modify individual configurations login to that specific folder (such as asg, elb, cw or r53) and run
+to modify individual configurations login to that specific folder (such as vpc, sg, kms or rds) and run
 
   ```
   make init
