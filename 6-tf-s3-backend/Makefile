@@ -1,3 +1,10 @@
+init:
+	make -C kms/ init
+	make -C vpc/ init
+	make -C sg/ init
+	make -C rds/ init
+
+
 apply-kms:
 	make -C kms/ apply
 	sleep 3
